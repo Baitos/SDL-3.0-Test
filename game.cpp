@@ -90,7 +90,7 @@ struct Resources {
         playerAnims[ANIM_PLAYER_IDLE] = Animation(1, 1.6f); // 1 frames, 1.6 seconds
         playerAnims[ANIM_PLAYER_RUN] = Animation(3, 0.3f);
         playerAnims[ANIM_PLAYER_SLIDE] = Animation(1, 1.0f);
-        playerAnims[ANIM_PLAYER_SHOOT] = Animation(1, 1.0f);
+        playerAnims[ANIM_PLAYER_SHOOT] = Animation(1, 0.3f);
         playerAnims[ANIM_PLAYER_JUMP] = Animation(1, 1.0f); 
         playerAnims[ANIM_PLAYER_DIE] = Animation(1, 1.0f);
         bulletAnims.resize(2); // 
@@ -358,7 +358,8 @@ void drawObject(const SDLState &state, GameState &gs, GameObject &obj, float wid
             SDL_FRect sensor{
 			    .x = obj.pos.x + obj.collider.x - gs.mapViewport.x,
 			    .y = obj.pos.y + obj.collider.y + obj.collider.h,
-			    .w = obj.collider.w, .h = 1
+			    .w = obj.collider.w, 
+                .h = 1
 		    };
 		    SDL_SetRenderDrawColor(state.renderer, 0, 0, 255, 150);
 		    SDL_RenderFillRect(state.renderer, &sensor);
@@ -390,8 +391,12 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
             const auto handleShooting = [&state, &gs, &res, &obj, &weaponTimer]() {
                 if (state.keys[SDL_SCANCODE_J]) {
                     // bullets!
-                    //obj.texture = res.texShoot; // in 2.5 hour video, go to 1:54:19 if you want to sync up shooting sprites with animations for running
+                     // in 2.5 hour video, go to 1:54:19 if you want to sync up shooting sprites with animations for running
                     if (weaponTimer.isTimeOut()) {
+                        /*if (obj.data.player.state == PlayerState::idle) {
+                            obj.texture = res.texShoot;
+                            obj.curAnimation = res.ANIM_PLAYER_SHOOT;
+                        }*/
                         weaponTimer.reset();
                         GameObject bullet;
                         bullet.data.bullet = BulletData();
@@ -453,9 +458,9 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
                             }
                         }
                     }
-                    handleShooting();
                     obj.texture = res.texIdle;
                     obj.curAnimation = res.ANIM_PLAYER_IDLE;
+                    handleShooting();
                     break;
                 }
                 case PlayerState::running:
@@ -463,8 +468,6 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
                     if (!currentDirection) { // if not moving return to idle
                         obj.data.player.state = PlayerState::idle;
                     }
-                    handleShooting();
-
                     if (obj.vel.x * obj.dir < 0 && obj.grounded) { // moving in different direction of vel, sliding
                         obj.texture = res.texSlide;
                         obj.curAnimation = res.ANIM_PLAYER_SLIDE;
@@ -472,13 +475,14 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
                         obj.texture = res.texRun;
                         obj.curAnimation = res.ANIM_PLAYER_RUN;
                     }
+                    handleShooting();
                     break;
                 }
                 case PlayerState::jumping:
                 {
-                    handleShooting();
                     obj.texture = res.texJump;
                     obj.curAnimation = res.ANIM_PLAYER_JUMP;
+                    handleShooting();
                     break;
                 }
             }
@@ -830,7 +834,7 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) { /
                             .x = 2,
                             .y = 1,
                             .w = 28,
-                            .h = 31 
+                            .h = 30 
                         };
                         gs.layers[LAYER_IDX_CHARACTERS].push_back(player); // put into array
                         gs.playerIndex = gs.layers[LAYER_IDX_CHARACTERS].size() - 1;
