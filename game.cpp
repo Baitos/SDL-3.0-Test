@@ -846,10 +846,10 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) { /
                         player.maxSpeedX = 150;
                         player.dynamic = true;
                         player.collider = { 
-                            .x = 2,
+                            .x = 1,
                             .y = 1,
                             .w = 28,
-                            .h = 30 
+                            .h = 30 // more accurate at 31, bug caused where player stuck in jump state in small ceilings
                         };
                         gs.layers[LAYER_IDX_CHARACTERS].push_back(player); // put into array
                         gs.playerIndex = gs.layers[LAYER_IDX_CHARACTERS].size() - 1;
