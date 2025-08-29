@@ -4,4 +4,4 @@ ext/
 *.exe
 *.dll
 .vscode
-Makefile
+/Makefile
