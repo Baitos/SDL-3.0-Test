@@ -630,15 +630,17 @@ void collisionResponse(const SDLState &state, GameState &gs, const Resources &re
                     break;
                 }
                 case ObjectType::enemy: {
-                    PlayerData &d = a.data.player;
-                    d.healthPoints -= 1;
-                    if (d.healthPoints <= 0) {
-                        const float JUMP_DEAD = -350.0f;
-                        d.state = PlayerState::dead;
-                        a.texture = res.texDie;
-                        a.curAnimation = res.ANIM_PLAYER_DIE;
-                        a.vel.x = 0;
-                        a.vel.y = JUMP_DEAD;
+                    if (b.data.enemy.state != EnemyState::dead) {
+                        PlayerData &d = a.data.player;
+                        d.healthPoints -= 1;
+                        if (d.healthPoints <= 0) {
+                            const float JUMP_DEAD = -350.0f;
+                            d.state = PlayerState::dead;
+                            a.texture = res.texDie;
+                            a.curAnimation = res.ANIM_PLAYER_DIE;
+                            a.vel.x = 0;
+                            a.vel.y = JUMP_DEAD;
+                        }
                     }
                     /*if (b.data.enemy.state != EnemyState::dead) {
                         a.vel = glm::vec2(100, 0) * -a.dir;
