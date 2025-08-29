@@ -1,0 +1,7 @@
+# .gitignore
+
+ext/
+*.exe
+*.dll
+.vscode
+
