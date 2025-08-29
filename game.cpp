@@ -85,7 +85,7 @@ struct Resources {
         return tex;
     }
 
-    void load(SDLState &state) {
+    void load(SDLState &state, bool real) {
         playerAnims.resize(6); // 
         playerAnims[ANIM_PLAYER_IDLE] = Animation(1, 1.6f); // 1 frames, 1.6 seconds
         playerAnims[ANIM_PLAYER_RUN] = Animation(3, 0.3f);
@@ -99,13 +99,26 @@ struct Resources {
         enemyAnims.resize(2);
         enemyAnims[ANIM_ENEMY] = Animation(2, 0.6f);
         enemyAnims[ANIM_ENEMY_DEAD] = Animation(1, 1.0f);
-        
-        texIdle = loadTexture(state.renderer, "data/IdleM.png");
-        texRun = loadTexture(state.renderer, "data/WalkLRM.png");
-        texJump = loadTexture(state.renderer, "data/JumpM.png");
-        texSlide = loadTexture(state.renderer, "data/SlideM.png");
-        texShoot = loadTexture(state.renderer, "data/ShootM.png");
-        texDie = loadTexture(state.renderer, "data/DieM.png");
+
+        if (real) {
+            texIdle = loadTexture(state.renderer, "data/IdleL.png");
+            texRun = loadTexture(state.renderer, "data/WalkLRL.png");
+            texJump = loadTexture(state.renderer, "data/JumpL.png");
+            texSlide = loadTexture(state.renderer, "data/SlideL.png");
+            texShoot = loadTexture(state.renderer, "data/ShootL.png");
+            texDie = loadTexture(state.renderer, "data/DieL.png");
+            texBullet = loadTexture(state.renderer, "data/fireballL.png");
+            texBulletHit = loadTexture(state.renderer, "data/fireballHitL.png");
+        } else {
+            texIdle = loadTexture(state.renderer, "data/IdleM.png");
+            texRun = loadTexture(state.renderer, "data/WalkLRM.png");
+            texJump = loadTexture(state.renderer, "data/JumpM.png");
+            texSlide = loadTexture(state.renderer, "data/SlideM.png");
+            texShoot = loadTexture(state.renderer, "data/ShootM.png");
+            texDie = loadTexture(state.renderer, "data/DieM.png");
+            texBullet = loadTexture(state.renderer, "data/fireballM.png");
+            texBulletHit = loadTexture(state.renderer, "data/fireballHitM.png");
+        }
         texGrass = loadTexture(state.renderer, "data/grass.png");
         texBrick = loadTexture(state.renderer, "data/brick.png");
         texStone = loadTexture(state.renderer, "data/stone.png");
@@ -115,8 +128,6 @@ struct Resources {
         texBg2 = loadTexture(state.renderer, "data/bg_layer2.png");
         texBg3 = loadTexture(state.renderer, "data/bg_layer3.png");
         texBg4 = loadTexture(state.renderer, "data/bg_layer4.png");
-        texBullet = loadTexture(state.renderer, "data/fireball.png");
-        texBulletHit = loadTexture(state.renderer, "data/fireballHit.png");
         texSpiny = loadTexture(state.renderer, "data/Spiny.png");
         texSpinyDead = loadTexture(state.renderer, "data/SpinyDead.png");
     }
@@ -144,7 +155,6 @@ void drawParallaxBackground(SDL_Renderer *renderer, SDL_Texture *texture, float 
 bool running = true;
 
 int main(int argc, char** argv) { // SDL needs to hijack main to do stuff; include argv/argc
-    
     SDLState state;
     state.width = 1600;
     state.height = 900;
@@ -153,12 +163,16 @@ int main(int argc, char** argv) { // SDL needs to hijack main to do stuff; inclu
 
     // go to result when you die, should probably change!!!!
     //main_loop: absolutely do not use this holy shit my computer almost crashed. fork bomb!
+    bool l = false;
+    if (argc > 1 && !strcmp(argv[1], "l")) {
+        l = true;
+    }
     if (!initialize(state)) {
         return 1;
     }
     // load game assets
     Resources res;
-    res.load(state);
+    res.load(state, l);
 
     // setup game data
     GameState gs(state);
@@ -465,7 +479,7 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
                 }
                 case PlayerState::running:
                 {
-                    if (!currentDirection) { // if not moving return to idle
+                    if (!currentDirection && obj.grounded) { // if not moving return to idle
                         obj.data.player.state = PlayerState::idle;
                     }
                     if (obj.vel.x * obj.dir < 0 && obj.grounded) { // moving in different direction of vel, sliding
@@ -564,10 +578,11 @@ void update(const SDLState &state, GameState &gs, Resources &res, GameObject &ob
                 checkCollision(state, gs, res, obj, objB, deltaTime);
                 if (objB.type == ObjectType::level) {
                     // grounded sensor
+                    const float inset = 2.0;
                     SDL_FRect sensor {
-                        .x = obj.pos.x + obj.collider.x,
+                        .x = obj.pos.x + obj.collider.x + 1,
                         .y = obj.pos.y + obj.collider.y + obj.collider.h,
-                        .w = obj.collider.w,
+                        .w = obj.collider.w - inset,
                         .h = 1
                     };
                     SDL_FRect rectB {
@@ -753,9 +768,9 @@ void createTiles(const SDLState &state, GameState &gs, const Resources &res) { /
     */
     short map[MAP_ROWS][MAP_COLS] = {
         4,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,3,0,3,0,5,0,0,0,0,3,0,3,0,5,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0,3,0,0,0,5,0,0,0,0,3,0,0,5,5,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-        2,2,0,0,2,0,0,2,0,0,0,0,0,0,5,3,0,0,0,0,0,0,0,5,3,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        2,2,0,0,2,0,0,2,0,0,0,0,0,0,5,3,0,0,0,0,0,0,1,5,3,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
         1,1,1,1,1,1,1,1,1,1,2,2,2,1,0,5,5,5,5,5,5,5,5,5,5,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
     };
     short foreground[MAP_ROWS][MAP_COLS] = {
@@ -875,7 +890,7 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
         switch (obj.data.player.state) {
             case PlayerState::idle:
             {
-                if (key == SDL_SCANCODE_K && keyDown) {
+                if (key == SDL_SCANCODE_K && keyDown && obj.grounded) {
                     obj.data.player.state = PlayerState::jumping;
                     obj.vel.y += JUMP_FORCE;
                 }
@@ -883,7 +898,7 @@ void handleKeyInput(const SDLState &state, GameState &gs, GameObject &obj,
             }
             case PlayerState::running:
             {
-                if (key == SDL_SCANCODE_K && keyDown) {
+                if (key == SDL_SCANCODE_K && keyDown && obj.grounded) {
                     obj.data.player.state = PlayerState::jumping;
                     obj.vel.y += JUMP_FORCE;
                 }
